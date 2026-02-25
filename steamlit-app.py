@@ -3,7 +3,7 @@ from PIL import Image
 import google.generativeai as genai
 
 # 1. Inserisci qui la tua API Key aggiornata
-genai.configure(api_key="AIzaSyCHgZssMgNI-8XpnN27PXiar-w7eBjnlHU")
+genai.configure(api_key="AIzaSyBrHsIvD101F1-VoXNlxJjoXXLba-ynHRc")
 
 # 2. Selezione del modello più recente e performante
 model = genai.GenerativeModel('gemini-1.5-flash')
