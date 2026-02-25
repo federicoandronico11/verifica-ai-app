@@ -3,4 +3,3 @@ google-generativeai
 pillow
 plotly
 pandas
-numpy
