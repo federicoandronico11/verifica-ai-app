@@ -5,32 +5,39 @@ import json
 class VerifAiCore:
     def __init__(self, api_key):
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Usiamo la versione stabile più recente per evitare errori 404
+        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
     def analyze_object(self, image_input):
-        img = Image.open(image_input)
-        
-        prompt = """
-        Agisci come un esperto di identificazione universale.
-        Analizza l'immagine e restituisci ESATTAMENTE questo formato JSON:
-        {
-            "category": "Macro categoria dell'oggetto",
-            "brand": "Marca rilevata",
-            "model": "Modello esatto",
-            "confidence": 0-100,
-            "verdict": "AUTHENTIC | UNKNOWN"
-        }
-        """
         try:
+            img = Image.open(image_input)
+            
+            prompt = """
+            Sei un esperto mondiale di catalogazione prodotti. 
+            Analizza l'immagine e identifica: Categoria, Marca e Modello.
+            Restituisci ESATTAMENTE questo formato JSON:
+            {
+                "category": "Macro categoria dell'oggetto",
+                "brand": "Marca rilevata",
+                "model": "Modello esatto",
+                "confidence": 0-100,
+                "verdict": "AUTHENTIC"
+            }
+            """
+            
             response = self.model.generate_content([prompt, img])
-            # Pulizia per estrarre solo il JSON
-            clean_res = response.text.strip().replace('```json', '').replace('```', '')
-            return json.loads(clean_res)
+            # Pulizia sicura per estrarre il JSON
+            text_response = response.text.strip()
+            if "```json" in text_response:
+                text_response = text_response.split("```json")[1].split("```")[0]
+            
+            return json.loads(text_response)
         except Exception as e:
+            # Ritorna l'errore nel campo modello per vederlo nell'app
             return {
-                "category": "Errore", 
+                "category": "Errore Tecnico", 
                 "brand": "N/A", 
-                "model": str(e), 
+                "model": f"Errore API: {str(e)}", 
                 "confidence": 0, 
                 "verdict": "ERROR"
             }
