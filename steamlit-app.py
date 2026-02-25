@@ -8,111 +8,97 @@ import json
 from datetime import datetime
 
 # =================================================================
-# [CORE CONFIGURATION] - CHIAVE GOOGLE GEMINI INSERITA
+# [INFRASTRUCTURE] - CONFIGURAZIONE GEMINI PRO 
 # =================================================================
+# La tua chiave è integrata per il riconoscimento universale
 GEMINI_API_KEY = "AIzaSyDFVg2nb57u02SmuVq76Sy2q157a0lkJl0"
 genai.configure(api_key=GEMINI_API_KEY)
 
-class VerifAiEngine:
-    """Motore di intelligenza artificiale per il riconoscimento professionale."""
+class GlobalRecognitionEngine:
+    """Motore di analisi universale per qualsiasi categoria di oggetto."""
     def __init__(self):
-        # Utilizziamo Gemini 1.5 Flash per la massima velocità di risposta nel pitch
+        # Utilizziamo 1.5 Flash per velocità, ma con istruzioni da 'Pro'
         self.model = genai.GenerativeModel('gemini-1.5-flash')
 
-    def analyze_image(self, image_file):
+    def analyze_any_object(self, image_file):
         try:
             img = Image.open(image_file)
             
-            # Prompt ingegnerizzato per evitare il risultato "None"
+            # PROMPT UNIVERSALE DI CLASSIFICAZIONE
+            # Questo istruisce l'IA a non fermarsi alla superficie
             prompt = """
-            Analizza questa immagine come un perito esperto. 
-            Identifica il marchio e il modello dell'oggetto inquadrato.
-            Se l'oggetto è uno smartphone, specifica versione e colore.
-            Fornisci i dati ESATTAMENTE in questo formato JSON:
+            SISTEMA DI IDENTIFICAZIONE UNIVERSALE VERIF.AI.
+            Analizza l'immagine e identifica l'oggetto indipendentemente dalla categoria.
+            REGOLE:
+            1. CATEGORIA: Indica la categoria merceologica esatta (es. Elettronica, Arredamento, Fashion, Meccanica).
+            2. BRAND: Identifica il produttore o la marca visibile. Se non presente, indica 'Non Rilevato'.
+            3. MODEL: Nome esatto del modello o codice identificativo.
+            4. AUTHENTICITY: Valuta se i loghi e i materiali sembrano originali (0-100%).
+            
+            RISPONDI SOLO IN FORMATO JSON:
             {
-                "brand": "NOME MARCHIO",
-                "model": "MODELLO ESATTO",
+                "category": "CATEGORIA",
+                "brand": "MARCA",
+                "model": "MODELLO",
                 "confidence": 0-100,
-                "verdict": "AUTHENTIC / NOT_RECOGNIZED",
-                "notes": "Breve descrizione tecnica"
+                "technical_details": "Descrizione approfondita dell'oggetto"
             }
             """
             
             response = self.model.generate_content([prompt, img])
-            
-            # Pulizia della risposta per estrarre il JSON puro
-            raw_text = response.text.replace('```json', '').replace('```', '').strip()
-            return json.loads(raw_text)
+            # Estrazione sicura del JSON
+            json_str = response.text.replace('```json', '').replace('```', '').strip()
+            return json.loads(json_str)
         except Exception as e:
-            return {"error": str(e), "brand": "CONNECTION_ERROR", "model": "RETRY_REQUIRED"}
+            return {"error": str(e), "category": "ERRORE", "brand": "RETRY", "model": "RETRY"}
 
 # =================================================================
-# [UI DESIGN & WORKFLOW]
+# [UI/UX INTERFACE] - DESIGN PROFESSIONALE
 # =================================================================
-def main():
-    st.set_page_config(page_title="VERIF.AI | GLOBAL TERMINAL", layout="wide")
-    
-    # CSS Luxury Industrial
+def bootstrap_universal_app():
+    st.set_page_config(page_title="VERIF.AI UNIVERSAL", layout="wide")
+
+    # CSS Industrial Gold & Carbon
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
-        .stApp { background-color: #000000; color: #FFFFFF; font-family: 'JetBrains Mono'; }
-        .header-container { padding: 30px; text-align: center; border-bottom: 2px solid #D4AF37; margin-bottom: 30px; }
-        .title-gold { font-family: 'Syncopate'; color: #D4AF37; letter-spacing: 12px; font-size: 2.5rem; }
-        .diag-panel { background: #111111; border: 1px solid #333; border-radius: 20px; padding: 25px; }
-        .label-style { color: #555; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 15px; }
-        .value-style { font-family: 'Syncopate'; color: #D4AF37; font-size: 1.3rem; margin-bottom: 10px; }
+        .stApp { background-color: #050505; color: #E0E0E0; font-family: 'JetBrains Mono'; }
+        .main-title { font-family: 'Syncopate'; color: #D4AF37; text-align: center; letter-spacing: 15px; padding: 40px; }
+        .side-panel { background: #111; border-radius: 20px; padding: 30px; border-left: 5px solid #D4AF37; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .label { color: #555; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 20px; }
+        .value { font-family: 'Syncopate'; color: #D4AF37; font-size: 1.1rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .status-verified { color: #00FF00; font-weight: bold; background: rgba(0,255,0,0.1); padding: 5px 15px; border-radius: 5px; }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='header-container'><h1 class='title-gold'>VERIF.AI</h1></div>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>VERIF.AI UNIVERSAL</h1>", unsafe_allow_html=True)
 
-    engine = VerifAiEngine()
+    engine = GlobalRecognitionEngine()
 
-    col_cam, col_data = st.columns([2, 1], gap="large")
+    col_scanner, col_analytics = st.columns([2, 1], gap="large")
 
-    with col_cam:
-        st.subheader("📡 NEURAL SCANNER")
-        cam_data = st.camera_input("SCANNER_INPUT", label_visibility="collapsed")
-        if cam_data:
-            st.image(cam_data, use_container_width=True)
+    with col_scanner:
+        st.write("📡 **INTERFACCIA DI ACQUISIZIONE OTTICA**")
+        cam_img = st.camera_input("SCANNER", label_visibility="collapsed")
+        if cam_img:
+            st.image(cam_img, use_container_width=True)
 
-    with col_data:
-        st.markdown("<div class='diag-panel'>", unsafe_allow_html=True)
-        st.subheader("📊 ANALYTICS")
+    with col_analytics:
+        st.markdown("<div class='side-panel'>", unsafe_allow_html=True)
+        st.subheader("📝 DIAGNOSTICA DETTAGLIATA")
         
-        if cam_data:
-            with st.status("Interrogazione Google Neural Network...", expanded=True) as status:
-                result = engine.analyze_image(cam_data)
+        if cam_img:
+            with st.status("Analisi Universale in corso...", expanded=True) as s:
+                data = engine.analyze_any_object(cam_img)
                 time.sleep(1)
-                status.update(label="✅ Analisi Completata", state="complete")
+                s.update(label="✅ Identificazione Completata", state="complete")
             
-            # Visualizzazione Risultati nella tendina di destra
-            st.markdown("<p class='label-style'>Identified Brand</p>", unsafe_allow_html=True)
-            st.markdown(f"<p class='value-style'>{result.get('brand')}</p>", unsafe_allow_html=True)
+            # TENDINA DI DESTRA - RISULTATI IMPECCABILI
+            st.markdown("<p class='label'>Categoria Oggetto</p>", unsafe_allow_html=True)
+            st.markdown(f"<p class='value'>{data.get('category')}</p>", unsafe_allow_html=True)
             
-            st.markdown("<p class='label-style'>Model & Revision</p>", unsafe_allow_html=True)
-            st.markdown(f"<p class='value-style'>{result.get('model')}</p>", unsafe_allow_html=True)
+            st.markdown("<p class='label'>Marchio / Brand</p>", unsafe_allow_html=True)
+            st.markdown(f"<p class='value'>{data.get('brand')}</p>", unsafe_allow_html=True)
             
-            # Grafico Gauge per Autenticità
-            score = result.get('confidence', 0)
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = score,
-                gauge = {'bar': {'color': "#D4AF37"}, 'bgcolor': "#222", 'axis': {'range': [0, 100]}},
-                number = {'suffix': "%", 'font': {'color': "#D4AF37"}}
-            ))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, height=200, margin=dict(l=20, r=20, t=20, b=20))
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown(f"<p class='label-style'>Technical Verdict</p>", unsafe_allow_html=True)
-            st.success(result.get('verdict'))
-        else:
-            st.info("In attesa di acquisizione ottica...")
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<br><hr style='border-color:#222;'><center><small style='color:#333;'>SYSTEM_STATUS: SECURE | ENGINE: GEMINI-1.5-FLASH | KEY_STATUS: ACTIVE</small></center>", unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+            st.markdown("<p class='label'>Modello Specifico</p>", unsafe_allow_html=True)
+            st.markdown(f"<p class='value'>{data.get('
