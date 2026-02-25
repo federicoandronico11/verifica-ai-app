@@ -6,42 +6,45 @@ import time
 class VerifAiCore:
     def __init__(self, api_key):
         self.api_key = api_key
-        # Inizializzazione con timeout esplicito per il 2026
         try:
-            self.client = genai.Client(api_key=self.api_key)
-            self.model_id = "gemini-1.5-flash"
+            # Specifichiamo i parametri di connessione 2026
+            self.client = genai.Client(
+                api_key=self.api_key,
+                http_options={'api_version': 'v1alpha'} # Forza l'ultima versione API
+            )
+            # Nome modello aggiornato per il 2026
+            self.model_id = "gemini-1.5-flash-latest"
         except Exception:
             self.client = None
 
     def analyze_object(self, image_input):
         if not self.client:
-            return {"category": "ERRORE", "brand": "AUTH_FAILED", "model": "Verifica API Key", "confidence": 0}
+            return {"category": "ERRORE", "brand": "INIT_FAIL", "model": "Check API Key", "confidence": 0}
             
         try:
             img = Image.open(image_input)
             
-            # Piccolo buffer per stabilizzare la connessione prima della chiamata
-            time.sleep(0.5)
-            
-            # Utilizziamo il metodo di generazione con parametri di sicurezza
+            # Chiamata con gestione esplicita dei parametri
             response = self.client.models.generate_content(
                 model=self.model_id,
-                contents=["Analizza l'oggetto. Restituisci JSON: {category, brand, model, confidence}", img]
+                contents=["Analizza questa immagine. Restituisci SOLO un oggetto JSON: {category, brand, model, confidence}", img]
             )
             
-            if not response.text:
-                raise ValueError("Risposta vuota dal server")
-
-            raw_text = response.text.strip()
-            clean_json = raw_text.replace("```json", "").replace("```", "").strip()
-            
-            return json.loads(clean_json)
+            # Parsing robusto
+            res_text = response.text.strip()
+            if "```json" in res_text:
+                res_text = res_text.split("```json")[1].split("```")[0]
+            elif "{" in res_text:
+                res_text = res_text[res_text.find("{"):res_text.rfind("}")+1]
+                
+            return json.loads(res_text)
             
         except Exception as e:
-            # Se fallisce ancora, attiviamo il log di emergenza
+            # Se vedi ancora 404, significa che la tua API Key non ha accesso a questo modello
+            error_msg = str(e)
             return {
-                "category": "RECOVERY_MODE",
-                "brand": "RETRY_REQUIRED",
-                "model": str(e)[:40],
+                "category": "ERRORE_CONNESSIONE",
+                "brand": "GOOGLE_CLOUD",
+                "model": "Modello non trovato o API non attiva",
                 "confidence": 0
             }
