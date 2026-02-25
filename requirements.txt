@@ -1,5 +1,5 @@
 google-genai
-streamlit
+streamlit>=1.35.0
 pillow
 plotly
 pandas
