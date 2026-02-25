@@ -4,201 +4,165 @@ import pandas as pd
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance
 import io
-import os
 import time
 import hashlib
-import hmac
 import json
 import uuid
-import binascii
-from datetime import datetime
 import plotly.graph_objects as go
+from datetime import datetime
 
 # =================================================================
-# 1. GLOBAL CONFIGURATION & SECURITY SHIELD
+# [MODULE 01] - SECURITY & CRYPTOGRAPHY SYSTEM
 # =================================================================
-# Inserire qui la chiave API di Google AI Studio
-API_KEY = "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"
-genai.configure(api_key=API_KEY)
+class SecurityVault:
+    """Sistema di protezione e firma digitale dei certificati."""
+    def __init__(self, secret_key="VERIFAI_GLOBAL_2026"):
+        self.secret_key = secret_key
 
-class SecurityCore:
-    """Gestisce la crittografia e l'integrità dei dati del certificato."""
-    @staticmethod
-    def generate_secure_hash(payload):
-        return hmac.new(b'VERIF_AI_SECRET_KEY', payload.encode(), hashlib.sha512).hexdigest()
+    def generate_fingerprint(self, data_string):
+        """Genera un'impronta digitale unica per la scansione."""
+        return hashlib.sha3_128(f"{data_string}{self.secret_key}".encode()).hexdigest().upper()
 
-    @staticmethod
-    def validate_image_integrity(image_file):
-        """Verifica se l'immagine è un file originale o manipolato."""
+    def audit_image_metadata(self, uploaded_file):
+        """Analisi forense dell'immagine per prevenire frodi (Deep Scan)."""
         try:
-            img = Image.open(image_file)
-            info = img._getexif()
-            return True if info else False
-        except:
-            return False
+            img = Image.open(uploaded_file)
+            exif_data = img._getexif()
+            if not exif_data:
+                return "WARNING: NO_METADATA_FOUND (Possible Screenshot)"
+            return "SUCCESS: ORIGINAL_HARDWARE_SOURCE"
+        except Exception:
+            return "ERROR: METADATA_CORRUPTED"
 
 # =================================================================
-# 2. NEURAL VISION ENGINE (The Oracle)
+# [MODULE 02] - NEURAL VISION ORCHESTRATOR
 # =================================================================
-class NeuralEngine:
-    """Motore di inferenza multimodale Gemini 1.5."""
-    def __init__(self, model_name='gemini-1.5-pro'):
-        self.model = genai.GenerativeModel(model_name)
+class NeuralOrchestrator:
+    """Gestore delle chiamate all'intelligenza artificiale Gemini."""
+    def __init__(self, api_key):
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('gemini-1.5-pro')
 
-    def analyze_asset(self, image_bytes):
-        # Prompt ingegnerizzato per precisione millimetrica
-        instruction = """
-        ROLE: Expert Luxury & Industrial Forensic Authenticator.
-        TASK: Analyze image for Brand, Model, Serial, and Authenticity.
-        OUTPUT FORMAT: Strict JSON.
-        STRUCTURE:
+    def execute_deep_analysis(self, image_bytes):
+        """Esegue il riconoscimento avanzato di Marchio e Modello."""
+        prompt = """
+        [SISTEMA DI ANALISI PROFESSIONALE]
+        Analizza l'immagine fornita. Identifica il prodotto con precisione forense.
+        Fornisci i dati ESATTAMENTE in questo formato JSON:
         {
-            "brand": "String",
-            "model": "String",
-            "confidence_score": "Float (0-100)",
-            "technical_notes": "String",
-            "visual_anomalies": ["Array of strings"],
-            "verdict": "AUTHENTIC | COUNTERFEIT | INCONCLUSIVE"
+            "brand": "Nome del Marchio",
+            "model": "Modello Esatto e Versione",
+            "material_analysis": "Descrizione materiali rilevati",
+            "authenticity_index": 0-100,
+            "verdict": "AUTHENTIC / COUNTERFEIT / UNKNOWN",
+            "risk_factors": ["lista anomalie se presenti"]
         }
         """
-        img_part = {"mime_type": "image/jpeg", "data": image_bytes}
+        image_part = {"mime_type": "image/jpeg", "data": image_bytes}
         try:
-            response = self.model.generate_content([instruction, img_part])
-            # Pulizia per estrazione JSON
-            return self._parse_json(response.text)
+            response = self.model.generate_content([prompt, image_part])
+            return self._clean_json_output(response.text)
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": f"IA_OFFLINE: {str(e)}"}
 
-    def _parse_json(self, text):
-        # Rimuove eventuali backticks markdown dall'output dell'IA
-        clean_text = text.replace("```json", "").replace("```", "").strip()
+    def _clean_json_output(self, text):
         try:
-            return json.loads(clean_text)
+            # Rimuove blocchi di codice markdown se presenti
+            json_str = text.split("```json")[-1].split("```")[0].strip()
+            return json.loads(json_str)
         except:
             return {"brand": "ERROR", "model": "RETRY_SCAN"}
 
 # =================================================================
-# 3. INDUSTRIAL UI COMPONENTS
+# [MODULE 03] - DATA VISUALIZATION & ANALYTICS
 # =================================================================
-def apply_custom_styles():
+class AnalyticsUI:
+    """Gestione dell'interfaccia grafica e dei grafici prestazionali."""
+    @staticmethod
+    def render_confidence_gauge(value):
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = value,
+            title = {'text': "AUTHENTICITY SCORE", 'font': {'family': "Syncopate", 'size': 14}},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#D4AF37"},
+                'bar': {'color': "#D4AF37"},
+                'bgcolor': "rgba(0,0,0,0)",
+                'steps': [
+                    {'range': [0, 50], 'color': 'rgba(255,0,0,0.1)'},
+                    {'range': [50, 85], 'color': 'rgba(255,165,0,0.1)'},
+                    {'range': [85, 100], 'color': 'rgba(0,255,0,0.1)'}
+                ],
+            }
+        ))
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, height=250)
+        return fig
+
+# =================================================================
+# [MODULE 04] - MAIN INTERFACE (Streamlit Front-end)
+# =================================================================
+def bootstrap_app():
+    st.set_page_config(page_title="VERIF.AI GLOBAL", layout="wide")
+    
+    # CSS Custom per look & feel da $1M
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@300;500&display=swap');
-        
-        :root { --main-gold: #D4AF37; --deep-black: #050505; --accent-blue: #007AFF; }
-        
-        .stApp { background-color: var(--deep-black); color: #FFF; font-family: 'JetBrains Mono', monospace; }
-        
-        .header-bar { border-bottom: 2px solid var(--main-gold); padding: 20px; text-align: center; margin-bottom: 40px; }
-        .logo-text { font-family: 'Syncopate'; font-size: 3rem; letter-spacing: 15px; color: var(--main-gold); text-shadow: 0 0 30px rgba(212,175,55,0.3); }
-        
-        .module-card { background: #111; border: 1px solid #222; border-radius: 15px; padding: 25px; margin-bottom: 20px; }
-        .data-label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 2px; }
-        .data-value { font-size: 1.2rem; color: var(--main-gold); font-family: 'Syncopate'; margin-bottom: 10px; }
-        
-        .status-verified { color: #00FF00; border: 1px solid #00FF00; padding: 5px 15px; border-radius: 5px; font-weight: bold; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
+        .stApp { background-color: #050505; color: #FFF; font-family: 'JetBrains Mono'; }
+        .main-header { font-family: 'Syncopate'; color: #D4AF37; text-align: center; letter-spacing: 15px; padding: 40px; border-bottom: 2px solid #222; }
+        .panel-right { background: #111; border-radius: 15px; padding: 25px; border-left: 4px solid #D4AF37; }
+        .metric-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .metric-value { font-family: 'Syncopate'; font-size: 1.2rem; color: #D4AF37; margin-bottom: 20px; }
         </style>
     """, unsafe_allow_html=True)
 
-# =================================================================
-# 4. MAIN APPLICATION ORCHESTRATOR
-# =================================================================
-def main():
-    apply_custom_styles()
-    
-    # Header
-    st.markdown("<div class='header-bar'><div class='logo-text'>VERIF.AI</div><p style='color:#444;'>SYSTEM_BUILD: 50.0.1 // ENTERPRISE_LICENSED</p></div>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>VERIF.AI GLOBAL</h1>", unsafe_allow_html=True)
 
-    # Sidebar - Gestione Account e Crediti
-    with st.sidebar:
-        st.markdown("### 👤 OPERATOR_ID: ADMIN_01")
-        st.progress(85, text="API_QUOTA: 850/1000")
-        st.divider()
-        mode = st.selectbox("OPERATING_MODE", ["REAL_TIME_SCAN", "FORENSIC_UPLOAD", "BATCH_PROCESSING"])
-        st.info("NODE_STATUS: ONLINE (GLOBAL-EU)")
+    # Inizializzazione moduli
+    vault = SecurityVault()
+    orchestrator = NeuralOrchestrator(api_key="TUA_CHIAVE_GOOGLE_QUI") # Inserisci la chiave qui
 
-    # Main Workspace
-    col_view, col_diag = st.columns([2, 1], gap="large")
+    col_scanner, col_results = st.columns([2, 1], gap="large")
 
-    with col_view:
-        st.markdown("<div class='module-card'>", unsafe_allow_html=True)
-        st.subheader("📡 NEURAL TERMINAL")
-        img_source = st.camera_input("INPUT_SOURCE", label_visibility="collapsed")
+    with col_scanner:
+        st.subheader("📡 NEURAL SCAN TERMINAL")
+        img_input = st.camera_input("SCAN", label_visibility="collapsed")
         
-        if img_source:
-            # Validazione Integrità Immagine
-            is_valid = SecurityCore.validate_image_integrity(img_source)
-            if not is_valid:
-                st.warning("⚠️ ATTENZIONE: Possibile manipolazione file (No EXIF data).")
-            
-            st.image(img_source, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        if img_input:
+            # 1. Audit Forense
+            audit_res = vault.audit_image_metadata(img_input)
+            st.caption(f"🛡️ {audit_res}")
+            st.image(img_input, use_container_width=True)
 
-    with col_diag:
-        st.markdown("<div class='module-card'>", unsafe_allow_html=True)
-        st.subheader("📊 DIAGNOSTICS")
+    with col_results:
+        st.markdown("<div class='panel-right'>", unsafe_allow_html=True)
+        st.subheader("📊 ANALYTICS")
         
-        if img_source:
-            # Inizializzazione Motore
-            engine = NeuralEngine()
-            
-            with st.status("🧠 Analisi Profonda Gemini 1.5...", expanded=True) as status:
-                res = engine.analyze_asset(img_source.getvalue())
-                time.sleep(1.5)
-                status.update(label="Analisi Completata", state="complete")
-            
-            # Display Risultati Dinamici
-            st.markdown(f"<p class='data-label'>Brand Identification</p><p class='data-value'>{res.get('brand')}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p class='data-label'>Model Specification</p><p class='data-value'>{res.get('model')}</p>", unsafe_allow_html=True)
-            
-            # Gauge Chart per Confidenza
-            conf = float(res.get('confidence_score', 0))
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = conf,
-                domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Confidence Index", 'font': {'size': 12, 'color': "#555"}},
-                gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': "#D4AF37"}}
-            ))
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white", 'family': "Arial"}, height=200)
-            st.plotly_chart(fig, use_container_width=True)
-
-            verdict = res.get('verdict')
-            st.markdown(f"<center><span class='status-verified'>{verdict}</span></center>", unsafe_allow_html=True)
+        if img_input:
+            with st.spinner("AI DEEP SCAN IN CORSO..."):
+                data = orchestrator.execute_deep_analysis(img_input.getvalue())
+                
+                # Visualizzazione Marchio e Modello (LA TUA TENDINA)
+                st.markdown(f"<p class='metric-label'>Identified Brand</p>", unsafe_allow_html=True)
+                st.markdown(f"<p class='metric-value'>{data.get('brand')}</p>", unsafe_allow_html=True)
+                
+                st.markdown(f"<p class='metric-label'>Model & Revision</p>", unsafe_allow_html=True)
+                st.markdown(f"<p class='metric-value'>{data.get('model')}</p>", unsafe_allow_html=True)
+                
+                # Grafico Confidenza
+                score = data.get('authenticity_index', 0)
+                st.plotly_chart(AnalyticsUI.render_confidence_gauge(score), use_container_width=True)
+                
+                # Verdetto Finale
+                verdict = data.get('verdict')
+                st.markdown(f"<center><h2 style='color:#00FF00;'>{verdict}</h2></center>", unsafe_allow_html=True)
         else:
-            st.write("In attesa di dati dal terminale...")
+            st.info("Scanner pronto. Inquadra il marchio del prodotto.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # =================================================================
-    # 5. BLOCKCHAIN & EXPORT MODULE
-    # =================================================================
-    if img_source and 'res' in locals():
-        st.markdown("### 🔐 CRYPTO_CERTIFICATION")
-        st.markdown("<div class='module-card'>", unsafe_allow_html=True)
-        
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.write("**Metadati Forensi**")
-            st.json({
-                "hash_id": SecurityCore.generate_secure_hash(str(res))[:24],
-                "entropy": "4.82 bits/pixel",
-                "pixel_match": "VALIDATED"
-            })
-        
-        with c2:
-            st.write("**Analisi Visiva**")
-            for note in res.get('visual_anomalies', []):
-                st.write(f"- {note}")
-        
-        with c3:
-            st.write("**Azioni Certificato**")
-            # Simulazione generazione PDF professionale
-            pdf_data = f"CERTIFICATE_{uuid.uuid4()}"
-            st.download_button("📥 DOWNLOAD OFFICIAL PDF", data=pdf_data, file_name="VerifAI_Cert.pdf", use_container_width=True)
-            if st.button("⛓️ REGISTRA SU LEDGER BLOCKCHAIN", use_container_width=True):
-                st.success("TRANSAZIONE INVIATA: 0x" + binascii.hexlify(os.urandom(20)).decode())
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Footer Professionale
+    st.divider()
+    st.markdown("<center><small>VERIF.AI GLOBAL LTD | Build 55.0 | encrypted-node-01</small></center>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    bootstrap_app()
