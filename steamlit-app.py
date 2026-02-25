@@ -2,36 +2,34 @@ import streamlit as st
 from PIL import Image
 import google.generativeai as genai
 
-# 1. Configurazione API (Usa la tua chiave aggiornata)
-genai.configure(api_key="AIzaSyCHgZssMgNI-8XpnN27PXiar-w7eBjnlHU") 
+# 1. Inserisci qui la tua API Key aggiornata
+genai.configure(api_key="AIzaSyCHgZssMgNI-8XpnN27PXiar-w7eBjnlHU")
 
-# 2. Inizializzazione Modello con nome standard
-model = genai.GenerativeModel('gemini-pro-vision') # Nome ultra-compatibile
+# 2. Selezione del modello più recente e performante
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.markdown("<h1 style='color: #D4AF37;'>📀 VERIF.AI | Scanner Live</h1>", unsafe_allow_html=True)
+st.write("Inquadra l'oggetto di lusso e scatta per l'analisi.")
 
-img_file_buffer = st.camera_input("Inquadra l'oggetto")
+img_file_buffer = st.camera_input("Scansiona Oggetto")
 
 if img_file_buffer is not None:
+    # Preparazione immagine
     img = Image.open(img_file_buffer)
     
-    with st.spinner('Analisi dei materiali e dei loghi in corso...'):
+    with st.spinner('Analisi AI in corso...'):
         try:
-            # Prompt ottimizzato
-            prompt = "Agisci come un esperto di autenticazione. Identifica l'oggetto e dai un Trust Score da 0 a 100."
+            # Nuova sintassi per l'invio sicuro di testo + immagine
+            response = model.generate_content([
+                "Agisci come un esperto mondiale di autenticazione. "
+                "Identifica l'oggetto, analizza loghi e materiali e "
+                "fornisci un Trust Score da 0 a 100 con una breve spiegazione.", 
+                img
+            ])
             
-            # Invio all'AI
-            response = model.generate_content([prompt, img])
-            
-            st.subheader("Verdetto VERIF.AI:")
+            st.subheader("Risultato VERIF.AI:")
             st.success(response.text)
             
         except Exception as e:
-            # Se il modello sopra fallisce, prova il backup (1.5-flash)
-            try:
-                backup_model = genai.GenerativeModel('gemini-1.5-flash')
-                response = backup_model.generate_content([prompt, img])
-                st.subheader("Verdetto VERIF.AI (Backup):")
-                st.success(response.text)
-            except:
-                st.error(f"Si è verificato un errore: {e}")
+            st.error(f"Si è verificato un errore tecnico: {e}")
+            st.info("Suggerimento: Verifica che la tua API Key sia attiva su Google AI Studio.")
