@@ -1,98 +1,52 @@
 import streamlit as st
-import time
+import google.generativeai as genai
 from PIL import Image
-import numpy as np
 
-# --- 1. DESIGN LUXURY BLINDATO ---
-st.set_page_config(page_title="VERIF.AI | PRO PITCH", layout="wide", initial_sidebar_state="collapsed")
+# --- CONFIGURAZIONE CERVELLO REALE ---
+# Inserisci qui la tua API KEY ottenuta da Google AI Studio
+genai.configure(api_key="AIzaSyDoiC_9Azh6Zgb8zQ3_f8OR0K1540QF3bQ")
+model = genai.GenerativeModel('gemini-1.5-flash')
 
+# --- DESIGN LUXURY (CONSOLIDATO) ---
+st.set_page_config(page_title="VERIF.AI | GLOBAL VISION", layout="wide")
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Share+Tech+Mono&display=swap');
     .stApp { background-color: #000; color: #D4AF37; font-family: 'Share Tech Mono', monospace; }
-    
-    .gold-logo {
-        text-align: center; font-family: 'Syncopate', sans-serif;
-        letter-spacing: 15px; font-size: 3.5rem; margin-top: 20px;
-        text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
-    }
-
-    .viewport-pro {
-        position: relative; border: 2px solid #D4AF37; border-radius: 30px;
-        overflow: hidden; max-width: 800px; margin: auto; background: #080808;
-    }
-    
-    /* Overlay HUD Reale */
-    .hud-line {
-        position: absolute; width: 100%; height: 2px; background: #D4AF37;
-        box-shadow: 0 0 20px #D4AF37; animation: scanAnim 3s infinite linear; z-index: 10;
-    }
-    @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
-
-    .identity-card {
-        background: rgba(212, 175, 55, 0.05); border: 1px solid #D4AF37;
-        padding: 25px; border-radius: 20px; margin: 20px auto; max-width: 800px; text-align: center;
-    }
+    .gold-logo { text-align: center; font-family: 'Syncopate'; letter-spacing: 15px; font-size: 3rem; padding: 20px; }
+    .viewport { border: 2px solid #D4AF37; border-radius: 20px; overflow: hidden; margin: auto; max-width: 700px; }
     </style>
     """, unsafe_allow_html=True)
 
 st.markdown("<div class='gold-logo'>VERIF.AI</div>", unsafe_allow_html=True)
 
-if 'steps' not in st.session_state:
-    st.session_state.steps = {"Geometria": False, "Materiali": False, "Seriale": False}
-
-# --- 2. ACQUISIZIONE LIVE (NO GALLERIA) ---
+# --- FOTOCAMERA NATIVA ---
 with st.container():
-    st.markdown("<div class='viewport-pro'><div class='hud-line'></div>", unsafe_allow_html=True)
-    img_file = st.camera_input("SCANSIONE NATIVA HD", label_visibility="collapsed")
+    st.markdown("<div class='viewport'>", unsafe_allow_html=True)
+    img_file = st.camera_input("SCAN", label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. ANALISI DEI DATI REALI ---
 if img_file:
-    # Trasformiamo la foto in numeri per analizzarla davvero
     img = Image.open(img_file)
-    img_array = np.array(img.convert('RGB'))
     
-    # Calcolo della saturazione e della luminosità (Dati reali della tua fotocamera)
-    brightness = np.mean(img_array)
-    saturation = np.std(img_array)
-
-    with st.status("📡 Analisi Vettoriale in corso...", expanded=True) as status:
-        time.sleep(2)
+    with st.status("🔮 Accesso al Database Neurale Globale...", expanded=True) as status:
+        # IL MOMENTO DELLA VERITÀ: Chiediamo all'IA cosa vede realmente
+        prompt = "Analizza questa immagine. Dimmi esattamente la MARCA e il MODELLO dell'oggetto inquadrato. Sii precisissimo. Se non è un oggetto, di 'Target non identificato'."
         
-        # LOGICA DI RICONOSCIMENTO BASATA SULLA LUCE (Infallibile per la demo)
-        # Se inquadri un viso (luce diffusa, bassa saturazione metallica):
-        if saturation < 30: 
-            brand, model = "NON IDENTIFICATO", "TARGET NON COERENTE (POSSIBILE VOLTO/TESSUTO)"
-            status.update(label="⚠️ FALLIMENTO: TARGET NON VALIDO", state="error")
-            valid = False
-        # Se inquadri un orologio (riflessi alti, contrasto forte):
-        else:
-            if brightness > 120:
-                brand, model = "ROLEX", "SUBMARINER DATE 126610LN"
-            else:
-                brand, model = "CASIO", "VINTAGE A168WG"
-            status.update(label="✅ OGGETTO IDENTIFICATO", state="complete")
-            valid = True
+        try:
+            response = model.generate_content([prompt, img])
+            risultato = response.text
+            status.update(label="✅ ANALISI COMPLETATA", state="complete")
+            
+            # BOX RISULTATO REALE
+            st.markdown(f"""
+                <div style="border: 1px solid #D4AF37; padding: 20px; border-radius: 15px; background: rgba(212,175,55,0.1); text-align: center; margin-top: 20px;">
+                    <p style="color: #888; font-size: 10px;">RICONOSCIMENTO UNIVERSALE ATTIVO</p>
+                    <h2 style="color: #D4AF37;">{risultato}</h2>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        except Exception as e:
+            st.error("Configura la tua API KEY per attivare la visione reale.")
 
-    # Visualizzazione Risultato (Sotto l'immagine)
-    st.markdown(f"""
-        <div class="identity-card">
-            <p style="margin:0; font-size:10px; letter-spacing:3px; color:#555;">NEURAL DATASET MATCH</p>
-            <h2 style="margin:10px 0; color:#D4AF37; font-family:Syncopate;">{brand}</h2>
-            <p style="margin:0; color:#D4AF37; opacity:0.8;">{model}</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # --- 4. STEP DI VERIFICA (Solo se l'oggetto è valido) ---
-    if valid:
-        st.markdown("---")
-        cols = st.columns(3)
-        for i, (k, v) in enumerate(st.session_state.steps.items()):
-            active = "border-left:2px solid #D4AF37; color:#D4AF37;" if v else "border-left:2px solid #222; color:#444;"
-            cols[i].markdown(f"<div style='padding:10px; {active}'>[0{i+1}] {k.upper()}</div>", unsafe_allow_html=True)
-        
-        if not st.session_state.steps["Geometria"]:
-            if st.button("ESEGUI MAPPATURA"):
-                st.session_state.steps["Geometria"] = True
-                st.rerun()
+st.markdown("<div style='text-align:center; color:#444; font-size:10px; margin-top:50px;'>PROTOCOLLO VISION V32.0 - POWERED BY GOOGLE NEURAL NETWORK</div>", unsafe_allow_html=True)
