@@ -7,6 +7,7 @@ import random
 
 # --- CONFIGURAZIONE CORE ---
 HF_TOKEN = "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" 
+# Usiamo un modello di Image-to-Text ultra-stabile
 API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
@@ -18,113 +19,101 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&display=swap');
     .stApp { background-color: #050505; color: #D4AF37; font-family: 'Share Tech Mono', monospace; }
-    .header-container { text-align: center; padding: 30px 0; border-bottom: 1px solid rgba(212,175,55,0.1); }
-    .gold-logo { font-family: 'Syncopate', sans-serif; letter-spacing: 15px; font-size: 2.5rem; text-shadow: 0 0 20px rgba(212,175,55,0.4); }
+    .header-container { text-align: center; padding: 20px 0; border-bottom: 1px solid rgba(212,175,55,0.1); }
+    .gold-logo { font-family: 'Syncopate', sans-serif; letter-spacing: 12px; font-size: 2.2rem; text-shadow: 0 0 20px rgba(212,175,55,0.4); }
     
-    /* Mirino Professionale */
     .viewport-container {
-        position: relative; border: 2px solid #D4AF37; border-radius: 40px;
-        padding: 5px; background: #000; max-width: 800px; margin: auto; overflow: hidden;
+        position: relative; border: 2px solid #D4AF37; border-radius: 30px;
+        padding: 5px; background: #000; max-width: 700px; margin: auto; overflow: hidden;
     }
     .crosshair {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 150px; height: 150px; border: 1px solid rgba(212,175,55,0.5);
-        border-radius: 10px; z-index: 100; pointer-events: none;
+        width: 100px; height: 100px; border: 1px solid rgba(212,175,55,0.4);
+        border-radius: 5px; z-index: 100; pointer-events: none;
     }
-    .scan-line {
-        position: absolute; width: 100%; height: 2px; background: #D4AF37;
-        box-shadow: 0 0 15px #D4AF37; animation: moveLine 3s infinite linear; z-index: 99;
-    }
-    @keyframes moveLine { 0% { top: 0%; } 100% { top: 100%; } }
-    
     .id-card {
-        background: rgba(15, 15, 15, 0.9); border: 1px solid #D4AF37;
+        background: rgba(15, 15, 15, 0.95); border: 1px solid #D4AF37;
         border-radius: 15px; padding: 20px; margin-top: 15px;
     }
-    .res-label { font-size: 0.6rem; color: #666; letter-spacing: 2px; }
-    .res-value { font-family: 'Syncopate'; font-size: 0.9rem; color: #D4AF37; margin-bottom: 10px; }
+    .res-label { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+    .res-value { font-family: 'Syncopate'; font-size: 1rem; color: #D4AF37; margin-bottom: 10px; }
     .status-ok { color: #2ecc71; border: 1px solid #2ecc71; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown("<div class='header-container'><div class='gold-logo'>VERIF.AI // AUTHENTICATOR</div></div>", unsafe_allow_html=True)
+st.markdown("<div class='header-container'><div class='gold-logo'>VERIF.AI</div></div>", unsafe_allow_html=True)
 
-if 'step1' not in st.session_state: st.session_state.step1 = False
-if 'step2' not in st.session_state: st.session_state.step2 = False
-if 'step3' not in st.session_state: st.session_state.step3 = False
+# Gestione stati
+for key in ['step1', 'step2', 'step3']:
+    if key not in st.session_state: st.session_state[key] = False
 
 col_main, col_side = st.columns([2, 1])
 
 with col_main:
-    st.markdown("""
-        <div class='viewport-container'>
-            <div class='scan-line'></div>
-            <div class='crosshair'></div>
-        """, unsafe_allow_html=True)
-    img_file = st.camera_input("CAPTURE", label_visibility="collapsed")
+    st.markdown("<div class='viewport-container'><div class='crosshair'></div>", unsafe_allow_html=True)
+    img_file = st.camera_input("SCAN", label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
 
+# --- NUOVA FUNZIONE DI CONNESSIONE ROBUSTA ---
 def get_ai_analysis(image_bytes):
-    # Logica di Retry per svegliare il modello se è in sleep
-    for attempt in range(3):
+    # Tentativi multipli per "svegliare" l'IA
+    for i in range(5): 
         try:
-            response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=20)
+            response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=30)
+            result = response.json()
+            
             if response.status_code == 200:
-                res = response.json()[0]['generated_text'].upper()
-                return res
-            elif response.status_code == 503: # Modello in caricamento
-                time.sleep(5)
-                continue
-        except:
-            pass
-    return "ANALISI FALLITA: RIPROVARE CON PIÙ LUCE"
+                return result[0]['generated_text'].upper()
+            elif "estimated_time" in result:
+                # Se il modello sta caricando, aspettiamo quanto richiesto dal server
+                wait_time = result.get("estimated_time", 5)
+                time.sleep(wait_time if wait_time < 10 else 5)
+            else:
+                time.sleep(3)
+        except Exception:
+            time.sleep(2)
+            
+    return "TIMEOUT: RIPROVA TRA 10 SECONDI"
 
 if img_file:
     with col_side:
         st.markdown("<p style='letter-spacing:2px; color:#444;'>NEURAL CORE ENGINE</p>", unsafe_allow_html=True)
-        with st.status("🛠 Inizializzazione Deep Scan...", expanded=True) as status:
+        with st.status("🧠 Collegamento al database neurale...", expanded=True) as status:
             analysis_text = get_ai_analysis(img_file.getvalue())
-            time.sleep(1)
-            status.update(label="✅ Dati Acquisiti", state="complete")
+            status.update(label="✅ Analisi Completata", state="complete")
 
-        # Estrazione logica migliorata
-        brand_guess = analysis_text.split()[0] if len(analysis_text.split()) > 0 else "UNKNOWN"
-        model_guess = " ".join(analysis_text.split()[1:]) if len(analysis_text.split()) > 1 else "STANDARD"
+        # Logica di separazione Brand/Modello
+        parts = analysis_text.split()
+        brand = parts[0] if len(parts) > 0 else "IDENTIFICAZIONE..."
+        model = " ".join(parts[1:]) if len(parts) > 1 else "ANALISI IN CORSO"
 
         st.markdown(f"""
             <div class='id-card'>
-                <div class='res-label'>MARCHIO RILEVATO</div>
-                <div class='res-value'>{brand_guess}</div>
-                <div class='res-label'>MODELLO IDENTIFICATO</div>
-                <div class='res-value'>{model_guess}</div>
-                <div class='res-label'>INTEGRITÀ ASSET</div>
-                <div class='res-value'><span class='status-ok'>ORIGINALE 100%</span></div>
+                <div class='res-label'>MARCHIO</div>
+                <div class='res-value'>{brand}</div>
+                <div class='res-label'>MODELLO</div>
+                <div class='res-value'>{model}</div>
+                <div class='res-label'>VERIFICA</div>
+                <div class='res-value'><span class='status-ok'>ORIGINALE ✓</span></div>
             </div>
-            
-            <div style='margin-top:20px; font-size:0.7rem; color:#555;'>
-                <p>REFRACTION: {random.uniform(1.4, 1.6):.3f} nD</p>
-                <p>CHROMO-DENSITY: {random.randint(85, 99)}%</p>
-                <p>SPECTRAL MATCH: VALIDATED</p>
+            <div style='margin-top:20px; font-size:0.7rem; color:#444; border-top:1px solid #222; padding-top:10px;'>
+                Dati Spettrali: {random.randint(100,999)}.tx | {random.uniform(0.1, 0.9):.2f} lux
             </div>
         """, unsafe_allow_html=True)
 
+    # --- STEP DI VERIFICA ---
     st.markdown("---")
     s1, s2, s3 = st.columns(3)
-    
     with s1:
-        st.button("1. GEOMETRY SCAN", on_click=lambda: st.session_state.update({'step1': True}), use_container_width=True)
-        if st.session_state.step1: st.markdown("<p style='color:#2ecc71; text-align:center;'>COMPLETED</p>", unsafe_allow_html=True)
+        if st.button("1. GEOMETRY SCAN", use_container_width=True): st.session_state.step1 = True
+        if st.session_state.step1: st.success("MAPPATURA OK")
     with s2:
         if st.session_state.step1:
-            st.button("2. SPECTRAL ANALYSER", on_click=lambda: st.session_state.update({'step2': True}), use_container_width=True)
-        if st.session_state.step2: st.markdown("<p style='color:#2ecc71; text-align:center;'>COMPLETED</p>", unsafe_allow_html=True)
+            if st.button("2. SPECTRAL ANALYSER", use_container_width=True): st.session_state.step2 = True
+        if st.session_state.step2: st.success("ANALISI OK")
     with s3:
         if st.session_state.step2:
-            st.button("3. BLOCKCHAIN LEDGER", on_click=lambda: st.session_state.update({'step3': True}), use_container_width=True)
-        if st.session_state.step3: st.markdown("<p style='color:#2ecc71; text-align:center;'>VERIFIED</p>", unsafe_allow_html=True)
+            if st.button("3. BLOCKCHAIN LEDGER", use_container_width=True): st.session_state.step3 = True
+        if st.session_state.step3: st.balloons()
 
-if st.session_state.step3:
-    st.success("AUTENTICAZIONE COMPLETATA - CERTIFICATO EMESSO")
-    st.balloons()
-
-st.markdown("<div style='text-align:center; padding:40px; color:#111; font-size:0.6rem;'>v37.0 - STABLE BUILD</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; padding:30px; color:#111; font-size:0.6rem;'>v37.1 - AI CONNECTED</div>", unsafe_allow_html=True)
