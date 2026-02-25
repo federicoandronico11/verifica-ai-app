@@ -1,4 +1,5 @@
-streamlit
-google-generativeai
-pillow
-plotly
+streamlit>=1.31.0
+google-generativeai>=0.4.1
+pillow>=10.2.0
+plotly>=5.18.0
+pandas>=2.1.0
