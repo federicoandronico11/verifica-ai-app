@@ -5,15 +5,15 @@ import json
 class VerifAiCore:
     def __init__(self, api_key):
         genai.configure(api_key=api_key)
-        # Usiamo la versione stabile più recente per evitare errori 404
-        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # Forziamo il modello specifico che Streamlit Cloud accetta sicuramente
+        self.model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
 
     def analyze_object(self, image_input):
         try:
             img = Image.open(image_input)
             
             prompt = """
-            Sei un esperto mondiale di catalogazione prodotti. 
+            Sei un esperto di identificazione prodotti. 
             Analizza l'immagine e identifica: Categoria, Marca e Modello.
             Restituisci ESATTAMENTE questo formato JSON:
             {
@@ -25,19 +25,20 @@ class VerifAiCore:
             }
             """
             
+            # Utilizziamo il metodo di generazione standard
             response = self.model.generate_content([prompt, img])
-            # Pulizia sicura per estrarre il JSON
+            
+            # Pulizia della risposta
             text_response = response.text.strip()
             if "```json" in text_response:
                 text_response = text_response.split("```json")[1].split("```")[0]
             
             return json.loads(text_response)
         except Exception as e:
-            # Ritorna l'errore nel campo modello per vederlo nell'app
             return {
-                "category": "Errore Tecnico", 
+                "category": "Errore di Sistema", 
                 "brand": "N/A", 
-                "model": f"Errore API: {str(e)}", 
+                "model": f"Dettaglio Errore: {str(e)}", 
                 "confidence": 0, 
-                "verdict": "ERROR"
+                "verdict": "RETRY"
             }
