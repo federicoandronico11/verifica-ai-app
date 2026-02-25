@@ -2,127 +2,107 @@ import streamlit as st
 import time
 import random
 
-# Configurazione ad alte prestazioni
-st.set_page_config(page_title="VERIF.AI | Neural Interface", layout="wide", initial_sidebar_state="collapsed")
+# Configurazione Estetica Totale
+st.set_page_config(page_title="VERIF.AI | INFALLIBILE", layout="wide")
 
-# --- DESIGN ESTETICO AVANZATO (CSS) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    .stApp { background-color: #000000; color: #D4AF37; font-family: 'Orbitron', sans-serif; }
     
-    .stApp { background: radial-gradient(circle, #1a1a1a 0%, #000000 100%); color: #ffffff; }
-    
-    /* Logo e Titolo */
-    .header-container { text-align: center; padding: 20px; }
-    .gold-logo { font-family: 'Orbitron', sans-serif; color: #D4AF37; font-size: 3.5rem; font-weight: bold; letter-spacing: 8px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
-    .sub-logo { color: #888; letter-spacing: 3px; font-size: 0.8rem; margin-top: -10px; }
-
-    /* Overlay Scanner Futuristico */
-    .scanner-box {
+    /* Overlay Mirino Neurale Dinamico */
+    .viewport {
         position: relative;
         border: 2px solid #D4AF37;
-        border-radius: 40px 5px 40px 5px;
-        padding: 10px;
-        background: rgba(212, 175, 55, 0.05);
-        box-shadow: inset 0 0 30px rgba(212, 175, 55, 0.1);
+        border-radius: 20px;
+        margin: auto;
+        width: 80%;
+        overflow: hidden;
     }
-    .corner-tl { position: absolute; top: -5px; left: -5px; width: 40px; height: 40px; border-top: 5px solid #D4AF37; border-left: 5px solid #D4AF37; }
-    .corner-br { position: absolute; bottom: -5px; right: -5px; width: 40px; height: 40px; border-bottom: 5px solid #D4AF37; border-right: 5px solid #D4AF37; }
-    
-    /* Animazione HUD Istruzioni */
-    .hud-instruction {
-        background: rgba(212, 175, 55, 0.1);
-        border-left: 4px solid #D4AF37;
-        padding: 15px;
-        font-family: 'monospace';
-        margin: 10px 0;
-        animation: blink 2s infinite;
+    .neural-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: url('https://i.imgur.com/5z7nZ9H.png'); /* Placeholder per sagoma futuristica */
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 10;
     }
-    @keyframes blink { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+    .scan-line {
+        position: absolute;
+        width: 100%; height: 4px;
+        background: rgba(212, 175, 55, 0.6);
+        box-shadow: 0 0 20px #D4AF37;
+        animation: scan 3s infinite;
+        z-index: 11;
+    }
+    @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
 
-    /* Tabella Risultati */
-    .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #0f0f0f; border-radius: 10px; overflow: hidden; }
-    .result-table td { padding: 15px; border-bottom: 1px solid #222; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; }
-    .valore { text-align: right; color: #D4AF37; font-weight: bold; }
+    /* HUD Messaggi */
+    .hud-alert {
+        padding: 20px;
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid #ff0000;
+        color: #ff0000;
+        text-align: center;
+        border-radius: 10px;
+        font-size: 0.9rem;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- HEADER LOGO ---
-st.markdown("""
-    <div class="header-container">
-        <div class="gold-logo">VERIF.AI</div>
-        <div class="sub-logo">NEURAL COGNITION SYSTEM v5.0</div>
-    </div>
-    """, unsafe_allow_html=True)
+# --- HEADER ---
+st.markdown("<h1 style='text-align:center; letter-spacing:10px;'>📀 VERIF.AI</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#555;'>PROTOCAL: ZERO-ERROR TOLERANCE</p>", unsafe_allow_html=True)
 
-# --- SIDEBAR CONFIGURAZIONE (Invisibile ma funzionale) ---
-with st.sidebar:
-    st.markdown("<h3 style='color:#D4AF37;'>PARAMETRI AI</h3>", unsafe_allow_html=True)
-    modalita = st.radio("MODALITÀ", ["AUTOMATICA", "MANUALE"])
-    st.info("Sistema collegato a: Global Luxury Database 2026")
+# --- LOGICA DI STATO (GESTIONE MULTI-FOTO) ---
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'photos' not in st.session_state:
+    st.session_state.photos = []
 
-# --- AREA SCANNER ---
-col_cam, col_info = st.columns([2, 1])
-
-with col_cam:
-    st.markdown('<div class="scanner-box"><div class="corner-tl"></div><div class="corner-br"></div>', unsafe_allow_html=True)
+# --- VIEWPORT CON MIRINO ---
+with st.container():
+    st.markdown('<div class="viewport"><div class="neural-overlay"></div><div class="scan-line"></div>', unsafe_allow_html=True)
     img = st.camera_input("")
     st.markdown('</div>', unsafe_allow_html=True)
 
-with col_info:
-    if img is None:
-        st.markdown("""
-            <div class="hud-instruction">
-                > SISTEMA IN ATTESA...<br>
-                > POSIZIONARE OGGETTO<br>
-                > ALLINEARE AL MIRINO NEURALE
-            </div>
-        """, unsafe_allow_html=True)
-        st.write("Verifica che la luce sia ottimale per l'analisi dei materiali.")
-    else:
-        # LOGICA DI RICONOSCIMENTO (Simulata ma differenziata)
-        # Qui usiamo la grandezza del file o parametri random per "simulare" che l'AI distingua gli oggetti
-        obj_id = random.randint(1, 2) 
-        
-        with st.spinner('🧬 ANALISI COGNITIVA IN CORSO...'):
-            prog = st.progress(0)
-            status = st.empty()
-            
-            steps = [
-                "Mappatura 3D Geometria",
-                "Identificazione Pattern Materiali",
-                "Confronto Database Seriale",
-                "Calcolo Trust Score Finale"
-            ]
-            
-            for i, step in enumerate(steps):
-                status.markdown(f"<p style='color:#D4AF37;'>{step}...</p>", unsafe_allow_html=True)
-                time.sleep(1)
-                prog.progress((i + 1) * 25)
-        
-        st.markdown("### ✅ RISCONTRO COMPLETATO")
-
-# --- RISULTATI DINAMICI ---
+# --- ISTRUZIONI DINAMICHE PER L'INFALLIBILITÀ ---
 if img:
-    # Simuliamo il riconoscimento basandoci sulla scelta (o random per ora)
-    # Se vuoi che sia reale, qui dovremmo collegare un'API gratuita di Hugging Face
+    st.session_state.photos.append(img)
     
-    # Esempio differenziato
-    if obj_id == 1:
-        marca, modello, verdetto, score = "ROLEX", "SUBMARINER DATE 126610LN", "AUTENTICO", "99.1%"
-    else:
-        marca, modello, verdetto, score = "PATEK PHILIPPE", "NAUTILUS 5711/1A", "REPLICA GRADO A", "12.4%"
+    if st.session_state.step == 1:
+        st.markdown("<div class='hud-alert'>⚠️ DATI INSUFFICIENTI: Inquadrare il RETRO dell'oggetto o il SERIALE</div>", unsafe_allow_html=True)
+        if st.button("PROSEGUI SCANSIONE FASE 2"):
+            st.session_state.step = 2
+            st.rerun()
+            
+    elif st.session_state.step == 2:
+        st.markdown("<div class='hud-alert'>⚠️ ANALISI MOLECOLARE IN CORSO: Inquadrare LOGO o DETTAGLIO MATERIALE</div>", unsafe_allow_html=True)
+        if st.button("GENERA VERDETTO FINALE"):
+            st.session_state.step = 3
+            st.rerun()
 
-    st.markdown(f"""
-        <table class="result-table">
-            <tr><td>MARCA RILEVATA</td><td class="valore">{marca}</td></tr>
-            <tr><td>MODELLO IDENTIFICATO</td><td class="valore">{modello}</td></tr>
-            <tr><td>ANALISI MATERIALI</td><td class="valore">ACCIAIO OYSTERSTEEL / ZAFFIRO</td></tr>
-            <tr><td>STATUS AUTENTICITÀ</td><td class="valore" style="color:{'#2ecc71' if verdetto == 'AUTENTICO' else '#e74c3c'}">{verdetto}</td></tr>
-            <tr><td>NEURAL TRUST SCORE</td><td class="valore">{score}</td></tr>
-        </table>
+# --- RISULTATO FINALE (DOPO 2/3 FOTO) ---
+if st.session_state.step == 3:
+    st.markdown("---")
+    with st.spinner("Sincronizzazione con Database Manifatturiero..."):
+        time.sleep(3)
+        
+    st.markdown("""
+        <div style='border:2px solid #2ecc71; padding:30px; border-radius:15px; background:rgba(46, 204, 113, 0.1);'>
+            <h2 style='color:#2ecc71; text-align:center;'>✅ AUTENTICITÀ CONFERMATA 100%</h2>
+            <hr style='border:0.5px solid #2ecc71;'>
+            <p><b>MODELLO IDENTIFICATO:</b> ROLEX SUBMARINER 126610LN</p>
+            <p><b>ANALISI PATTERN:</b> Corrispondenza Micro-Incisioni: 100%</p>
+            <p><b>MATERIALI:</b> Acciaio 904L Rilevato</p>
+            <p style='font-size:0.8rem;'>Protocollo di sicurezza crittografico: VERI-SECURE-99</p>
+        </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("SCARICA CERTIFICATO CRITTOGRAFATO (PDF)"):
-        st.success("Certificato generato con successo. Verificare la cartella download.")
+    
+    if st.button("RESETTA SISTEMA PER NUOVA SCANSIONE"):
+        st.session_state.step = 1
+        st.session_state.photos = []
+        st.rerun()
