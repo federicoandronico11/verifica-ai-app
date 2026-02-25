@@ -6,14 +6,13 @@ import time
 
 # --- CONFIGURAZIONE CORE ---
 HF_TOKEN = "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" 
-# Utilizziamo un modello più avanzato per l'analisi dei dettagli: ViT (Visual Transformer)
 API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 # --- SETUP PAGINA ---
 st.set_page_config(page_title="VERIF.AI | SUPREME AUTH", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CSS PREMIUM CONSOLIDATO ---
+# --- CSS PREMIUM ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&display=swap');
@@ -30,28 +29,11 @@ st.markdown("""
         box-shadow: 0 0 20px #D4AF37; animation: moveLine 4s infinite linear; z-index: 100;
     }
     @keyframes moveLine { 0% { top: 0%; } 100% { top: 100%; } }
-    
-    /* Nuova Card Risultati Dettagliata */
     .id-card {
         background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
         border: 1px solid #D4AF37; border-radius: 20px; padding: 25px;
         margin-top: 20px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    .res-label { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+    .res-label { font-size: 0.6rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
     .res-value { font-family: 'Syncopate'; font-size: 1.1rem; color: #D4AF37; margin-bottom: 15px; }
-    .status-authentic { color: #2ecc71; font-weight: bold; border: 1px solid #2ecc71; padding: 2px 10px; border-radius: 5px; }
-    
-    .step-item { border: 1px solid #222; padding: 18px; border-radius: 12px; text-align: center; font-size: 0.85rem; margin-bottom: 15px; }
-    .active-step { border-color: #D4AF37; background: rgba(212,175,55,0.08); color: #D4AF37; }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.markdown("<div class='header-container'><div class='gold-logo'>VERIF.AI</div></div>", unsafe_allow_html=True)
-
-if 'step1' not in st.session_state: st.session_state.step1 = False
-if 'step2' not in st.session_state: st.session_state.step2 = False
-if 'step3' not in st.session_state: st.session_state.step3 = False
-
-col_main, col_side = st.columns([2, 1])
-
-with
+    .status-authentic { color: #2ecc71; font-weight: bold; border: 1px solid #2ecc71; padding: 4px 12px; border-radius:
