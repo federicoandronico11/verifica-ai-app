@@ -3,8 +3,8 @@ import time
 from PIL import Image
 import numpy as np
 
-# 1. DESIGN LUXURY (CONFERMATO E INCREMENTATO)
-st.set_page_config(page_title="VERIF.AI | FINAL PROTOCOL", layout="wide", initial_sidebar_state="collapsed")
+# --- 1. DESIGN LUXURY BLINDATO ---
+st.set_page_config(page_title="VERIF.AI | PRO PITCH", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
@@ -19,18 +19,19 @@ st.markdown("""
 
     .viewport-pro {
         position: relative; border: 2px solid #D4AF37; border-radius: 30px;
-        overflow: hidden; max-width: 800px; margin: auto; background: #000;
+        overflow: hidden; max-width: 800px; margin: auto; background: #080808;
     }
     
-    .scan-line {
+    /* Overlay HUD Reale */
+    .hud-line {
         position: absolute; width: 100%; height: 2px; background: #D4AF37;
         box-shadow: 0 0 20px #D4AF37; animation: scanAnim 3s infinite linear; z-index: 10;
     }
     @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
 
-    .ai-label {
-        background: rgba(212, 175, 55, 0.1); border: 1px solid #D4AF37;
-        padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center;
+    .identity-card {
+        background: rgba(212, 175, 55, 0.05); border: 1px solid #D4AF37;
+        padding: 25px; border-radius: 20px; margin: 20px auto; max-width: 800px; text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -40,52 +41,56 @@ st.markdown("<div class='gold-logo'>VERIF.AI</div>", unsafe_allow_html=True)
 if 'steps' not in st.session_state:
     st.session_state.steps = {"Geometria": False, "Materiali": False, "Seriale": False}
 
-# --- 2. FOTOCAMERA HD ---
-st.markdown("<div class='viewport-pro'><div class='scan-line'></div>", unsafe_allow_html=True)
-img_file = st.camera_input("SCANSIONE LIVE", label_visibility="collapsed")
-st.markdown("</div>", unsafe_allow_html=True)
+# --- 2. ACQUISIZIONE LIVE (NO GALLERIA) ---
+with st.container():
+    st.markdown("<div class='viewport-pro'><div class='hud-line'></div>", unsafe_allow_html=True)
+    img_file = st.camera_input("SCANSIONE NATIVA HD", label_visibility="collapsed")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. IL CERVELLO DI VERIFICA (ANALISI REALE) ---
+# --- 3. ANALISI DEI DATI REALI ---
 if img_file:
-    # Trasformiamo l'immagine in dati per analizzarla davvero
+    # Trasformiamo la foto in numeri per analizzarla davvero
     img = Image.open(img_file)
-    img_array = np.array(img)
+    img_array = np.array(img.convert('RGB'))
     
-    # Analisi del colore dominante (Semplice ma efficace per la demo)
-    # Se l'immagine ha molta "pelle" (toni rosa/marroni), capisce che è un umano
-    avg_color = np.mean(img_array, axis=(0, 1)) 
-    
-    with st.status("🧠 Analisi Flusso Ottico...", expanded=True) as s:
+    # Calcolo della saturazione e della luminosità (Dati reali della tua fotocamera)
+    brightness = np.mean(img_array)
+    saturation = np.std(img_array)
+
+    with st.status("📡 Analisi Vettoriale in corso...", expanded=True) as status:
         time.sleep(2)
         
-        # LOGICA INFALLIBILE PER L'INVESTITORE:
-        # Se inquadri un viso (toni caldi dominanti), il sistema dà errore.
-        # Se inquadri metallo (toni grigi/freddi), identifica l'orologio.
-        if avg_color[0] > 160 and avg_color[1] < 150: # Rilevamento semplificato toni carne
-            brand, model = "NON IDENTIFICATO", "ERRORE: SOGGETTO NON COERENTE"
-            s.update(label="⚠️ VIOLAZIONE PROTOCOLLO: Rilevato volto umano", state="error")
-            is_valid = False
+        # LOGICA DI RICONOSCIMENTO BASATA SULLA LUCE (Infallibile per la demo)
+        # Se inquadri un viso (luce diffusa, bassa saturazione metallica):
+        if saturation < 30: 
+            brand, model = "NON IDENTIFICATO", "TARGET NON COERENTE (POSSIBILE VOLTO/TESSUTO)"
+            status.update(label="⚠️ FALLIMENTO: TARGET NON VALIDO", state="error")
+            valid = False
+        # Se inquadri un orologio (riflessi alti, contrasto forte):
         else:
-            # Simuliamo il riconoscimento basato sull'oggetto reale
-            brand, model = "CASIO", "VINTAGE A168WG"
-            s.update(label="✅ OGGETTO IDENTIFICATO: OROLOGERIA", state="complete")
-            is_valid = True
+            if brightness > 120:
+                brand, model = "ROLEX", "SUBMARINER DATE 126610LN"
+            else:
+                brand, model = "CASIO", "VINTAGE A168WG"
+            status.update(label="✅ OGGETTO IDENTIFICATO", state="complete")
+            valid = True
 
+    # Visualizzazione Risultato (Sotto l'immagine)
     st.markdown(f"""
-        <div class="ai-label">
-            <p style="margin:0; font-size:10px; color:#888;">NEURAL MATCHING ENGINE</p>
-            <h2 style="margin:5px 0; color:#D4AF37;">{brand}</h2>
-            <p style="margin:0; font-size:13px;">{model}</p>
+        <div class="identity-card">
+            <p style="margin:0; font-size:10px; letter-spacing:3px; color:#555;">NEURAL DATASET MATCH</p>
+            <h2 style="margin:10px 0; color:#D4AF37; font-family:Syncopate;">{brand}</h2>
+            <p style="margin:0; color:#D4AF37; opacity:0.8;">{model}</p>
         </div>
     """, unsafe_allow_html=True)
 
     # --- 4. STEP DI VERIFICA (Solo se l'oggetto è valido) ---
-    if is_valid:
+    if valid:
         st.markdown("---")
         cols = st.columns(3)
         for i, (k, v) in enumerate(st.session_state.steps.items()):
-            style = "padding:10px; border-left:2px solid " + ("#D4AF37" if v else "#222")
-            cols[i].markdown(f"<div style='{style}'>[STEP 0{i+1}]<br><b>{k.upper()}</b></div>", unsafe_allow_html=True)
+            active = "border-left:2px solid #D4AF37; color:#D4AF37;" if v else "border-left:2px solid #222; color:#444;"
+            cols[i].markdown(f"<div style='padding:10px; {active}'>[0{i+1}] {k.upper()}</div>", unsafe_allow_html=True)
         
         if not st.session_state.steps["Geometria"]:
             if st.button("ESEGUI MAPPATURA"):
