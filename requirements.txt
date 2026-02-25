@@ -1,4 +1,4 @@
-google-genai==0.3.0
+google-genai
 streamlit>=1.35.0
 pillow
 plotly
