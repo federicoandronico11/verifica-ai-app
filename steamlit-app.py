@@ -4,7 +4,7 @@ from PIL import Image
 
 # --- CONFIGURAZIONE CERVELLO REALE ---
 # Inserisci qui la tua API KEY ottenuta da Google AI Studio
-genai.configure(api_key="AIzaSyDoiC_9Azh6Zgb8zQ3_f8OR0K1540QF3bQ")
+genai.configure(api_key="AIzaSyBgqPPSiuQw1xnPIw5cA-XZH2Akaldgl78")
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- DESIGN LUXURY (CONSOLIDATO) ---
