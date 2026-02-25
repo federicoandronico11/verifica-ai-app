@@ -3,7 +3,7 @@ from PIL import Image
 import google.generativeai as genai
 
 # Configurazione API
-genai.configure(api_key="TUA_CHIAVE_API") 
+genai.configure(api_key="AIzaSyDboGqQMSa3YTdeQhLK5M7L2Aew0nUmrRA") 
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 st.markdown("<h1 style='color: #D4AF37;'>📀 VERIF.AI | Scanner Live</h1>", unsafe_allow_html=True)
