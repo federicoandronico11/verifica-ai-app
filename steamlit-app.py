@@ -13,7 +13,7 @@ headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 st.set_page_config(page_title="VERIF.AI | SUPREME AUTH", layout="wide", initial_sidebar_state="collapsed")
 
 # --- CSS PREMIUM ---
-st.markdown("""
+
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&display=swap');
     .stApp { background-color: #050505; color: #D4AF37; font-family: 'Share Tech Mono', monospace; }
